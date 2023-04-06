@@ -7,15 +7,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.anirban.firebasedemo01.feature_authentication.presentation.util.RegistrationState
 import com.anirban.firebasedemo01.feature_authentication.presentation.screens.RegisterScreen
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import kotlinx.coroutines.launch
 
 /**
  *
  * This is the Register Screen [RegisterScreen]'s State holder or viewModel Class which feeds Data
  * and state to the [RegisterScreen] UI layer
  *
- * @property myRepository variable to the Object of the Repository
  * @property userInputEmail This contains the Email inputted by the User
  * @property userInputEnterPassword maintains the value of the Password of the User
  * @property userInputReEnterPassword maintains the value of the Re-Entered Password of the User
@@ -38,9 +43,6 @@ import com.anirban.firebasedemo01.feature_authentication.presentation.screens.Re
  */
 
 class RegisterViewModel : ViewModel() {
-
-    // Making the Repository Variable
-//    private val myRepository = Repository()
 
     // This contains the Email inputted by the User
     var userInputEmail: String by mutableStateOf("")
@@ -65,6 +67,9 @@ class RegisterViewModel : ViewModel() {
     // Variable keeps track of the State of the API Request
     var registrationState: RegistrationState by mutableStateOf(RegistrationState.Initialized)
         private set
+
+    // Firebase Authentication Instance
+    private var firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
 
     // This function updates the Email Id entered by the User
     fun updateUserInputEmail(newEmail: String) {
@@ -123,6 +128,44 @@ class RegisterViewModel : ViewModel() {
 
     // This Function sends the Register Request to the Backend Server
     fun sendFirebaseRegisterRequest() {
-        d("Register View Model", "Invoked")
+
+        registrationState = RegistrationState.Loading
+
+        if (userInputEmail.isEmpty() || userInputEnterPassword.isEmpty() || userInputReEnterPassword.isEmpty()) {
+            registrationState = RegistrationState.Failure(errorMessage = "Enter All the Data")
+            return
+        }
+
+        if (userInputEnterPassword != userInputReEnterPassword) {
+            registrationState = RegistrationState.Failure(errorMessage = "Passwords doesn't Match")
+            return
+        }
+
+        viewModelScope.launch {
+
+            firebaseAuth.createUserWithEmailAndPassword(userInputEmail, userInputEnterPassword)
+                .addOnCompleteListener {
+
+                    if (it.isSuccessful)
+                        registrationState = RegistrationState.Success
+                    else {
+
+                        registrationState = when (it.exception) {
+                            is FirebaseAuthWeakPasswordException -> RegistrationState.Failure(
+                                "Password Need at least 6 characters"
+                            )
+                            is FirebaseAuthUserCollisionException -> RegistrationState.Failure(
+                                "User Already Present"
+                            )
+                            is FirebaseAuthInvalidCredentialsException -> RegistrationState.Failure(
+                                "Invalid Credentials"
+                            )
+                            else -> RegistrationState.Failure(
+                                "Network Not Available"
+                            )
+                        }
+                    }
+                }
+        }
     }
 }

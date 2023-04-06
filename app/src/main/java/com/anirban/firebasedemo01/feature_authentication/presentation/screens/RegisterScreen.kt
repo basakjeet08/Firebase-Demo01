@@ -1,6 +1,7 @@
 package com.anirban.firebasedemo01.feature_authentication.presentation.screens
 
 import android.content.res.Configuration
+import android.util.Log.d
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
@@ -81,10 +82,10 @@ fun RegisterScreen(
     when (myViewModel.registrationState) {
         is RegistrationState.Success -> {
 
-//        context.startActivity(Intent(context , HomeActivity::class.java))
-//        (context as Activity).finish()
-
+            // Resetting the values inside the ViewModel
+            myViewModel.resetToDefaults()
             Toast.makeText(context, "Sign Up Successful", Toast.LENGTH_SHORT).show()
+            navController.navigate(AuthenticationRoutes.Login.route)
         }
         is RegistrationState.Loading -> {
             registrationRequestEmpty = false

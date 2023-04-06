@@ -24,13 +24,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.anirban.firebasedemo01.feature_authentication.presentation.components.UserInputUI
-import com.anirban.firebasedemo01.core.theme.CustomAppTheme
 import com.anirban.firebasedemo01.R
+import com.anirban.firebasedemo01.core.theme.CustomAppTheme
 import com.anirban.firebasedemo01.core.theme.buttonShape
 import com.anirban.firebasedemo01.core.theme.custom_icons.Visibility
 import com.anirban.firebasedemo01.feature_authentication.presentation.components.GradientButton
 import com.anirban.firebasedemo01.feature_authentication.presentation.components.TextButtonUI
+import com.anirban.firebasedemo01.feature_authentication.presentation.components.UserInputUI
 import com.anirban.firebasedemo01.feature_authentication.presentation.navigation.AuthenticationRoutes
 import com.anirban.firebasedemo01.feature_authentication.presentation.stateholder.LoginViewModel
 import com.anirban.firebasedemo01.feature_authentication.presentation.util.LoginState
@@ -81,10 +81,14 @@ fun LoginScreen(
             when (myViewModel.loginState) {
                 is LoginState.Success -> {
 
+                    // Resetting all the Values
+                    myViewModel.resetToDefault()
+
+
                     // Starting the New Activity
 //                    context.startActivity(Intent(context, HomeActivity::class.java))
 //                    (context as Activity).finish()
-
+                    Toast.makeText(context, "Login Successful", Toast.LENGTH_SHORT).show()
                 }
                 is LoginState.Loading -> {
                     loginRequestEmpty = false
